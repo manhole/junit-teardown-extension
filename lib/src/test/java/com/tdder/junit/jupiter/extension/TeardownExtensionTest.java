@@ -59,6 +59,15 @@ class TeardownExtensionTest {
     }
 
     @Test
+    void staticFieldInjection() throws Exception {
+        final TestExecutionSummary summary = runTest(StaticFieldInjection.class);
+
+        assertEquals(0, summary.getTestsFailedCount());
+        assertEquals(1, summary.getTestsSucceededCount());
+        assertThat(messages, is(contains("3", "2", "1")));
+    }
+
+    @Test
     void methodInjection_independenceOnMultipleTestMethods() throws Exception {
         final TestExecutionSummary summary = runTest(MethodInjection_IndependenceOnMultipleTestMethods.class);
 
@@ -113,6 +122,22 @@ class TeardownExtensionTest {
 
         // injected by extension
         private TeardownRegistry teardownRegistry_;
+
+        @Test
+        void succeeded1() throws Exception {
+            teardownRegistry_.add(() -> messages.add("1"));
+            teardownRegistry_.add(() -> messages.add("2"));
+            teardownRegistry_.add(() -> messages.add("3"));
+
+            assertEquals(1, 1);
+        }
+
+    }
+    @ExtendWith(TeardownExtension.class)
+    static class StaticFieldInjection {
+
+        // injected by extension
+        private static TeardownRegistry teardownRegistry_;
 
         @Test
         void succeeded1() throws Exception {
