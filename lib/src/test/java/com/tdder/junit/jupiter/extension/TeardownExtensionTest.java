@@ -46,6 +46,15 @@ class TeardownExtensionTest {
         assertThat(messages, is(empty()));
     }
 
+    @Test
+    void fieldInjection() throws Exception {
+        final TestExecutionSummary summary = runTest(FieldInjection.class);
+
+        assertEquals(0, summary.getTestsFailedCount());
+        assertEquals(1, summary.getTestsSucceededCount());
+        assertThat(messages, is(contains("3", "2", "1")));
+    }
+
     @ExtendWith(TeardownExtension.class)
     static class MethodInjection {
 
@@ -74,6 +83,23 @@ class TeardownExtensionTest {
         @Test
         void test1() throws Exception {
             teardownRegistry_.add(() -> messages.add("never called"));
+        }
+
+    }
+
+    @ExtendWith(TeardownExtension.class)
+    static class FieldInjection {
+
+        // injected by extension
+        private TeardownRegistry teardownRegistry_;
+
+        @Test
+        void succeeded1() throws Exception {
+            teardownRegistry_.add(() -> messages.add("1"));
+            teardownRegistry_.add(() -> messages.add("2"));
+            teardownRegistry_.add(() -> messages.add("3"));
+
+            assertEquals(1, 1);
         }
 
     }
