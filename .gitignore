@@ -171,3 +171,6 @@ gradle-app.setting
 
 # Ignore Gradle build output directory
 build
+
+.idea/jarRepositories.xml
+.idea/misc.xml
