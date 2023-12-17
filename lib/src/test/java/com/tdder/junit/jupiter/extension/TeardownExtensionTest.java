@@ -85,6 +85,15 @@ class TeardownExtensionTest {
         assertThat(messages, is(contains("1-2", "1-1", "setUp succeeded1", "2-2", "2-1", "setUp succeeded2")));
     }
 
+    @Test
+    void staticFieldInjection_independenceOnMultipleTestMethods() throws Exception {
+        final TestExecutionSummary summary = runTest(StaticFieldInjection_IndependenceOnMultipleTestMethods.class);
+
+        assertEquals(0, summary.getTestsFailedCount());
+        assertEquals(2, summary.getTestsSucceededCount());
+        assertThat(messages, is(contains("2-2", "2-1", "setUp succeeded2", "1-2", "1-1", "setUp succeeded1")));
+    }
+
     @ExtendWith(TeardownExtension.class)
     static class MethodInjection {
 
@@ -133,6 +142,7 @@ class TeardownExtensionTest {
         }
 
     }
+
     @ExtendWith(TeardownExtension.class)
     static class StaticFieldInjection {
 
@@ -198,6 +208,33 @@ class TeardownExtensionTest {
         @Test
         void succeeded2() throws Exception {
             assertThat(((TeardownRegistryImpl) teardownRegistry_).size(), is(1));
+            teardownRegistry_.add(() -> messages.add("2-1"));
+            teardownRegistry_.add(() -> messages.add("2-2"));
+        }
+
+    }
+
+    @ExtendWith(TeardownExtension.class)
+    @TestMethodOrder(MethodOrderer.MethodName.class) // make the test method execution order deterministic.
+    static class StaticFieldInjection_IndependenceOnMultipleTestMethods {
+
+        private static TeardownRegistry teardownRegistry_;
+
+        @BeforeEach
+        void setUp(final TestInfo testInfo) {
+            teardownRegistry_.add(() -> messages.add("setUp " + testInfo.getTestMethod().get().getName()));
+        }
+
+        @Test
+        void succeeded1() throws Exception {
+            assertThat(((TeardownRegistryImpl) teardownRegistry_).size(), is(1));
+            teardownRegistry_.add(() -> messages.add("1-1"));
+            teardownRegistry_.add(() -> messages.add("1-2"));
+        }
+
+        @Test
+        void succeeded2() throws Exception {
+            assertThat(((TeardownRegistryImpl) teardownRegistry_).size(), is(4));
             teardownRegistry_.add(() -> messages.add("2-1"));
             teardownRegistry_.add(() -> messages.add("2-2"));
         }
