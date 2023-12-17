@@ -2,8 +2,9 @@
 
 * text=auto
 
-*.bat text eol=crlf
-*.sh  text eol=lf
+*.bat           text eol=crlf
+*.sh            text eol=lf
+/gradlew        text eol=lf
 
-*.txt text
-*.md  text
+*.txt           text
+*.md            text
