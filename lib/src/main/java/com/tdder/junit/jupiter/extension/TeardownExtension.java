@@ -67,6 +67,13 @@ public class TeardownExtension implements ParameterResolver, BeforeAllCallback, 
 
             field.setAccessible(true);
             field.set(testInstance, teardownRegistry);
+
+            // Clear static field to null. Because it will remain in memory.
+            if (ReflectionUtils.isStatic(field)) {
+                final ExtensionContext.Store.CloseableResource closeableResource = () -> field.set(testInstance, null);
+                store.getOrComputeIfAbsent("cleanup_static_field", (v) -> closeableResource);
+            }
+
         }
     }
 

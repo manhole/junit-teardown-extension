@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
@@ -60,7 +61,11 @@ class TeardownExtensionTest {
 
     @Test
     void staticFieldInjection() throws Exception {
+        assertThat(StaticFieldInjection.teardownRegistry_, is(nullValue()));
         final TestExecutionSummary summary = runTest(StaticFieldInjection.class);
+
+        // after test, static field should be cleared to null.
+        assertThat(StaticFieldInjection.teardownRegistry_, is(nullValue()));
 
         assertEquals(0, summary.getTestsFailedCount());
         assertEquals(1, summary.getTestsSucceededCount());
