@@ -12,9 +12,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.platform.launcher.listeners.TestExecutionSummary;
+
+import com.tdder.junit.jupiter.extension.TeardownExtension.TeardownRegistryImpl;
 
 class TeardownExtensionTest {
 
@@ -53,6 +58,15 @@ class TeardownExtensionTest {
         assertEquals(0, summary.getTestsFailedCount());
         assertEquals(1, summary.getTestsSucceededCount());
         assertThat(messages, is(contains("3", "2", "1")));
+    }
+
+    @Test
+    void methodInjection_independenceOnMultipleTestMethods() throws Exception {
+        final TestExecutionSummary summary = runTest(MethodInjection_IndependenceOnMultipleTestMethods.class);
+
+        assertEquals(0, summary.getTestsFailedCount());
+        assertEquals(2, summary.getTestsSucceededCount());
+        assertThat(messages, is(contains("1-2", "1-1", "setUp succeeded1", "2-2", "2-1", "setUp succeeded2")));
     }
 
     @ExtendWith(TeardownExtension.class)
@@ -100,6 +114,32 @@ class TeardownExtensionTest {
             teardownRegistry_.add(() -> messages.add("3"));
 
             assertEquals(1, 1);
+        }
+
+    }
+
+    @ExtendWith(TeardownExtension.class)
+    @TestMethodOrder(MethodOrderer.MethodName.class) // make the test method execution order deterministic.
+    static class MethodInjection_IndependenceOnMultipleTestMethods {
+
+        @BeforeEach
+        void setUp(final TeardownRegistry teardownRegistry, final TestInfo testInfo) {
+            assertThat(((TeardownRegistryImpl) teardownRegistry).size(), is(0));
+            teardownRegistry.add(() -> messages.add("setUp " + testInfo.getTestMethod().get().getName()));
+        }
+
+        @Test
+        void succeeded1(final TeardownRegistry teardownRegistry) throws Exception {
+            assertThat(((TeardownRegistryImpl) teardownRegistry).size(), is(1));
+            teardownRegistry.add(() -> messages.add("1-1"));
+            teardownRegistry.add(() -> messages.add("1-2"));
+        }
+
+        @Test
+        void succeeded2(final TeardownRegistry teardownRegistry) throws Exception {
+            assertThat(((TeardownRegistryImpl) teardownRegistry).size(), is(1));
+            teardownRegistry.add(() -> messages.add("2-1"));
+            teardownRegistry.add(() -> messages.add("2-2"));
         }
 
     }

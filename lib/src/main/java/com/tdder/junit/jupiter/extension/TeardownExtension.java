@@ -83,6 +83,10 @@ public class TeardownExtension implements ParameterResolver, BeforeEachCallback,
             return closeable;
         }
 
+        int size() {
+            return tasks_.size();
+        }
+
         @Override
         public void close() {
             while (!tasks_.isEmpty()) {
