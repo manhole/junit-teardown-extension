@@ -20,6 +20,11 @@ java {
     }
 }
 
+tasks.withType(SourceTask)
+        .findAll { t -> t.hasProperty('options') }
+        .findAll { t -> t.options.hasProperty('encoding') }
+        .each { t -> t.options.encoding = 'UTF-8' }
+
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
