@@ -19,8 +19,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.platform.launcher.listeners.TestExecutionSummary;
 
-import com.tdder.junit.jupiter.extension.TeardownExtension.TeardownRegistryImpl;
-
 class TeardownExtensionTest {
 
     private static final List<String> messages = new ArrayList<>();
