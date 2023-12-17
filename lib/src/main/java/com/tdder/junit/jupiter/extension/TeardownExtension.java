@@ -1,5 +1,6 @@
 package com.tdder.junit.jupiter.extension;
 
+import java.lang.reflect.Method;
 import java.util.Deque;
 import java.util.LinkedList;
 
@@ -18,7 +19,8 @@ public class TeardownExtension implements ParameterResolver, AfterEachCallback {
     @Override
     public boolean supportsParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
             throws ParameterResolutionException {
-        return parameterContext.getParameter().getType() == TeardownRegistry.class;
+        final boolean method = parameterContext.getDeclaringExecutable() instanceof Method;
+        return parameterContext.getParameter().getType() == TeardownRegistry.class && method;
     }
 
     @Override
