@@ -11,4 +11,3 @@ plugins {
 }
 
 rootProject.name = 'junit5-teardown-extension'
-include('lib')
