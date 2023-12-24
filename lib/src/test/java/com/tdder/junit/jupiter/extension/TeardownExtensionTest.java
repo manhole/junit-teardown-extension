@@ -61,11 +61,11 @@ class TeardownExtensionTest {
 
     @Test
     void staticFieldInjection() throws Exception {
-        assertThat(StaticFieldInjection.teardownRegistry_, is(nullValue()));
+        assertThat(StaticFieldInjection.teardown_, is(nullValue()));
         final TestExecutionSummary summary = runTest(StaticFieldInjection.class);
 
         // after test, static field should be cleared to null.
-        assertThat(StaticFieldInjection.teardownRegistry_, is(nullValue()));
+        assertThat(StaticFieldInjection.teardown_, is(nullValue()));
 
         assertEquals(0, summary.getTestsFailedCount());
         assertEquals(1, summary.getTestsSucceededCount());
@@ -103,12 +103,12 @@ class TeardownExtensionTest {
     static class MethodInjection {
 
         @Test
-        void succeeded1(final TeardownRegistry teardownRegistry) throws Exception {
-            assertThat(teardownRegistry, is(notNullValue()));
+        void succeeded1(final TeardownRegistry teardown) throws Exception {
+            assertThat(teardown, is(notNullValue()));
 
-            teardownRegistry.add(() -> messages.add("1"));
-            teardownRegistry.add(() -> messages.add("2"));
-            teardownRegistry.add(() -> messages.add("3"));
+            teardown.add(() -> messages.add("1"));
+            teardown.add(() -> messages.add("2"));
+            teardown.add(() -> messages.add("3"));
 
             assertEquals(1, 1);
         }
@@ -118,15 +118,15 @@ class TeardownExtensionTest {
     @ExtendWith(TeardownExtension.class)
     static class ConstructorInjection {
 
-        private final TeardownRegistry teardownRegistry_;
+        private final TeardownRegistry teardown_;
 
-        ConstructorInjection(final TeardownRegistry teardownRegistry) {
-            teardownRegistry_ = teardownRegistry;
+        ConstructorInjection(final TeardownRegistry teardown) {
+            teardown_ = teardown;
         }
 
         @Test
         void test1() throws Exception {
-            teardownRegistry_.add(() -> messages.add("never called"));
+            teardown_.add(() -> messages.add("never called"));
         }
 
     }
@@ -135,13 +135,13 @@ class TeardownExtensionTest {
     static class FieldInjection {
 
         // injected by extension
-        private TeardownRegistry teardownRegistry_;
+        private TeardownRegistry teardown_;
 
         @Test
         void succeeded1() throws Exception {
-            teardownRegistry_.add(() -> messages.add("1"));
-            teardownRegistry_.add(() -> messages.add("2"));
-            teardownRegistry_.add(() -> messages.add("3"));
+            teardown_.add(() -> messages.add("1"));
+            teardown_.add(() -> messages.add("2"));
+            teardown_.add(() -> messages.add("3"));
 
             assertEquals(1, 1);
         }
@@ -152,13 +152,13 @@ class TeardownExtensionTest {
     static class StaticFieldInjection {
 
         // injected by extension
-        private static TeardownRegistry teardownRegistry_;
+        private static TeardownRegistry teardown_;
 
         @Test
         void succeeded1() throws Exception {
-            teardownRegistry_.add(() -> messages.add("1"));
-            teardownRegistry_.add(() -> messages.add("2"));
-            teardownRegistry_.add(() -> messages.add("3"));
+            teardown_.add(() -> messages.add("1"));
+            teardown_.add(() -> messages.add("2"));
+            teardown_.add(() -> messages.add("3"));
 
             assertEquals(1, 1);
         }
@@ -170,23 +170,23 @@ class TeardownExtensionTest {
     static class MethodInjection_IndependenceOnMultipleTestMethods {
 
         @BeforeEach
-        void setUp(final TeardownRegistry teardownRegistry, final TestInfo testInfo) {
-            assertThat(((TeardownRegistryImpl) teardownRegistry).size(), is(0));
-            teardownRegistry.add(() -> messages.add("setUp " + testInfo.getTestMethod().get().getName()));
+        void setUp(final TeardownRegistry teardown, final TestInfo testInfo) {
+            assertThat(((TeardownRegistryImpl) teardown).size(), is(0));
+            teardown.add(() -> messages.add("setUp " + testInfo.getTestMethod().get().getName()));
         }
 
         @Test
-        void succeeded1(final TeardownRegistry teardownRegistry) throws Exception {
-            assertThat(((TeardownRegistryImpl) teardownRegistry).size(), is(1));
-            teardownRegistry.add(() -> messages.add("1-1"));
-            teardownRegistry.add(() -> messages.add("1-2"));
+        void succeeded1(final TeardownRegistry teardown) throws Exception {
+            assertThat(((TeardownRegistryImpl) teardown).size(), is(1));
+            teardown.add(() -> messages.add("1-1"));
+            teardown.add(() -> messages.add("1-2"));
         }
 
         @Test
-        void succeeded2(final TeardownRegistry teardownRegistry) throws Exception {
-            assertThat(((TeardownRegistryImpl) teardownRegistry).size(), is(1));
-            teardownRegistry.add(() -> messages.add("2-1"));
-            teardownRegistry.add(() -> messages.add("2-2"));
+        void succeeded2(final TeardownRegistry teardown) throws Exception {
+            assertThat(((TeardownRegistryImpl) teardown).size(), is(1));
+            teardown.add(() -> messages.add("2-1"));
+            teardown.add(() -> messages.add("2-2"));
         }
 
     }
@@ -195,26 +195,26 @@ class TeardownExtensionTest {
     @TestMethodOrder(MethodOrderer.MethodName.class) // make the test method execution order deterministic.
     static class FieldInjection_IndependenceOnMultipleTestMethods {
 
-        private TeardownRegistry teardownRegistry_;
+        private TeardownRegistry teardown_;
 
         @BeforeEach
         void setUp(final TestInfo testInfo) {
-            assertThat(((TeardownRegistryImpl) teardownRegistry_).size(), is(0));
-            teardownRegistry_.add(() -> messages.add("setUp " + testInfo.getTestMethod().get().getName()));
+            assertThat(((TeardownRegistryImpl) teardown_).size(), is(0));
+            teardown_.add(() -> messages.add("setUp " + testInfo.getTestMethod().get().getName()));
         }
 
         @Test
         void succeeded1() throws Exception {
-            assertThat(((TeardownRegistryImpl) teardownRegistry_).size(), is(1));
-            teardownRegistry_.add(() -> messages.add("1-1"));
-            teardownRegistry_.add(() -> messages.add("1-2"));
+            assertThat(((TeardownRegistryImpl) teardown_).size(), is(1));
+            teardown_.add(() -> messages.add("1-1"));
+            teardown_.add(() -> messages.add("1-2"));
         }
 
         @Test
         void succeeded2() throws Exception {
-            assertThat(((TeardownRegistryImpl) teardownRegistry_).size(), is(1));
-            teardownRegistry_.add(() -> messages.add("2-1"));
-            teardownRegistry_.add(() -> messages.add("2-2"));
+            assertThat(((TeardownRegistryImpl) teardown_).size(), is(1));
+            teardown_.add(() -> messages.add("2-1"));
+            teardown_.add(() -> messages.add("2-2"));
         }
 
     }
@@ -223,25 +223,25 @@ class TeardownExtensionTest {
     @TestMethodOrder(MethodOrderer.MethodName.class) // make the test method execution order deterministic.
     static class StaticFieldInjection_IndependenceOnMultipleTestMethods {
 
-        private static TeardownRegistry teardownRegistry_;
+        private static TeardownRegistry teardown_;
 
         @BeforeEach
         void setUp(final TestInfo testInfo) {
-            teardownRegistry_.add(() -> messages.add("setUp " + testInfo.getTestMethod().get().getName()));
+            teardown_.add(() -> messages.add("setUp " + testInfo.getTestMethod().get().getName()));
         }
 
         @Test
         void succeeded1() throws Exception {
-            assertThat(((TeardownRegistryImpl) teardownRegistry_).size(), is(1));
-            teardownRegistry_.add(() -> messages.add("1-1"));
-            teardownRegistry_.add(() -> messages.add("1-2"));
+            assertThat(((TeardownRegistryImpl) teardown_).size(), is(1));
+            teardown_.add(() -> messages.add("1-1"));
+            teardown_.add(() -> messages.add("1-2"));
         }
 
         @Test
         void succeeded2() throws Exception {
-            assertThat(((TeardownRegistryImpl) teardownRegistry_).size(), is(4));
-            teardownRegistry_.add(() -> messages.add("2-1"));
-            teardownRegistry_.add(() -> messages.add("2-2"));
+            assertThat(((TeardownRegistryImpl) teardown_).size(), is(4));
+            teardown_.add(() -> messages.add("2-1"));
+            teardown_.add(() -> messages.add("2-2"));
         }
 
     }
