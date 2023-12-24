@@ -1,0 +1,10 @@
+// https://qiita.com/cypher256/items/f3db6bba86692c3c7733
+// @see org.gradle.api.tasks.wrapper.Wrapper, org.gradle.util.DistributionLocator
+tasks.withType(Wrapper).configureEach {
+    distributionType = Wrapper.DistributionType.ALL
+    doFirst {
+        def versionService = new URL('https://services.gradle.org/versions/current')
+        gradleVersion = new groovy.json.JsonSlurper().parseText(versionService.text).version
+        println "gradleVersion: ${gradleVersion}"
+    }
+}
