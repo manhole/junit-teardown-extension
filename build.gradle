@@ -27,6 +27,9 @@ tasks.withType(SourceTask)
 
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
+    filter {
+        includeTestsMatching "*Test"
+    }
 }
 
 // https://qiita.com/cypher256/items/f3db6bba86692c3c7733
