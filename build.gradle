@@ -1,5 +1,7 @@
 plugins {
     id 'java'
+    id 'maven-publish'
+    id 'signing'
 }
 
 repositories {
@@ -30,6 +32,61 @@ tasks.withType(Test).configureEach {
     filter {
         includeTestsMatching "*Test"
     }
+}
+
+tasks.register('sourcesJar', Jar) {
+    archiveClassifier.set("sources")
+    from sourceSets.main.allSource
+}
+
+artifacts { archives sourcesJar }
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            pom {
+                name = project.name
+                description = project.description
+                url = "https://github.com/manhole/junit5-teardown-extension"
+                inceptionYear = "2023"
+                licenses {
+                    license {
+                        name = "The Apache Software License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                        distribution = "repo"
+                    }
+                }
+                developers {
+                    developer {
+                        id = "manhole"
+                        name = "HONMA Hirotaka"
+                        email = "manholex@gmail.com"
+                    }
+                }
+                scm {
+                    connection = "https://github.com/manhole/junit5-teardown-extension.git"
+                    developerConnection = "https://github.com/manhole/junit5-teardown-extension.git"
+                    url = "https://github.com/manhole/junit5-teardown-extension"
+                }
+                issueManagement {
+                    system = "GitHub"
+                    url = "https://github.com/manhole/junit5-teardown-extension/issues"
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name "ProjectLocal"
+            url project.layout.buildDirectory.dir('maven-repo').get().asFile.toURI().toURL()
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
 }
 
 // https://qiita.com/cypher256/items/f3db6bba86692c3c7733
