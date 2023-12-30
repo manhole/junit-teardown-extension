@@ -15,7 +15,17 @@ public class JUnitRunner {
         final LauncherDiscoveryRequestBuilder requestBuilder = LauncherDiscoveryRequestBuilder.request();
         requestBuilder.selectors(DiscoverySelectors.selectClass(testClass));
         final LauncherDiscoveryRequest discoveryRequest = requestBuilder.build();
+        return runTest(discoveryRequest);
+    }
 
+    static TestExecutionSummary runTestMethod(final Class<?> testClass, final String methodName) {
+        final LauncherDiscoveryRequestBuilder requestBuilder = LauncherDiscoveryRequestBuilder.request();
+        requestBuilder.selectors(DiscoverySelectors.selectMethod(testClass, methodName));
+        final LauncherDiscoveryRequest discoveryRequest = requestBuilder.build();
+        return runTest(discoveryRequest);
+    }
+
+    private static TestExecutionSummary runTest(final LauncherDiscoveryRequest discoveryRequest) {
         final Launcher launcher = LauncherFactory.create();
         final SummaryGeneratingListener listener = new SummaryGeneratingListener();
         launcher.execute(discoveryRequest, LoggingListener.forJavaUtilLogging(), listener);

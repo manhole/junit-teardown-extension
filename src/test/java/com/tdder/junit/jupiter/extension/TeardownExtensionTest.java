@@ -1,9 +1,12 @@
 package com.tdder.junit.jupiter.extension;
 
 import static com.tdder.junit.jupiter.extension.JUnitRunner.runTest;
+import static com.tdder.junit.jupiter.extension.JUnitRunner.runTestMethod;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.emptyArray;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
@@ -99,6 +102,25 @@ class TeardownExtensionTest {
         assertThat(messages, is(contains("2-2", "2-1", "setUp succeeded2", "1-2", "1-1", "setUp succeeded1")));
     }
 
+    @Test
+    void failed_at_test() throws Exception {
+        // Exercise
+        final TestExecutionSummary summary = runTestMethod(ExceptionCase.class, "failed_at_test");
+
+        // Verify
+        assertEquals(1, summary.getTestsFailedCount());
+        assertEquals(0, summary.getTestsSucceededCount());
+        assertThat(messages, is(contains("2", "1")));
+
+        final List<TestExecutionSummary.Failure> failures = summary.getFailures();
+        assertThat(failures.size(), is(1));
+        final TestExecutionSummary.Failure failure = failures.get(0);
+        final Throwable e = failure.getException();
+        assertThat(e, is(instanceOf(AssertionError.class)));
+        assertThat(e.getCause(), is(nullValue()));
+        assertThat(e.getSuppressed(), is(emptyArray()));
+    }
+
     @ExtendWith(TeardownExtension.class)
     static class MethodInjection {
 
@@ -159,8 +181,6 @@ class TeardownExtensionTest {
             teardown_.add(() -> messages.add("1"));
             teardown_.add(() -> messages.add("2"));
             teardown_.add(() -> messages.add("3"));
-
-            assertEquals(1, 1);
         }
 
     }
@@ -242,6 +262,22 @@ class TeardownExtensionTest {
             assertThat(((TeardownRegistryImpl) teardown_).size(), is(4));
             teardown_.add(() -> messages.add("2-1"));
             teardown_.add(() -> messages.add("2-2"));
+        }
+
+    }
+
+    @ExtendWith(TeardownExtension.class)
+    @TestMethodOrder(MethodOrderer.MethodName.class) // make the test method execution order deterministic.
+    static class ExceptionCase {
+
+        private static TeardownRegistry teardown_;
+
+        @Test
+        void failed_at_test() throws Exception {
+            teardown_.add(() -> messages.add("1"));
+            teardown_.add(() -> messages.add("2"));
+
+            assertEquals(1, 2);
         }
 
     }
