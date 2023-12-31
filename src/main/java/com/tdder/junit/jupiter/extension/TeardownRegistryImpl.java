@@ -20,14 +20,14 @@ class TeardownRegistryImpl implements TeardownRegistry, ExtensionContext.Store.C
     }
 
     @Override
-    public void close() {
+    public void close()  throws Exception {
         while (!tasks_.isEmpty()) {
             // teardown in reverse order
             final AutoCloseable task = tasks_.removeLast();
             try {
                 task.close();
             } catch (final Exception e) {
-                e.printStackTrace();
+                throw e;
             }
         }
     }
