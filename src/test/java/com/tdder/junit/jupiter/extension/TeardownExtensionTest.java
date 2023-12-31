@@ -152,8 +152,6 @@ class TeardownExtensionTest {
             teardown.add(() -> messages.add("1"));
             teardown.add(() -> messages.add("2"));
             teardown.add(() -> messages.add("3"));
-
-            assertEquals(1, 1);
         }
 
     }
@@ -185,8 +183,6 @@ class TeardownExtensionTest {
             teardown_.add(() -> messages.add("1"));
             teardown_.add(() -> messages.add("2"));
             teardown_.add(() -> messages.add("3"));
-
-            assertEquals(1, 1);
         }
 
     }
