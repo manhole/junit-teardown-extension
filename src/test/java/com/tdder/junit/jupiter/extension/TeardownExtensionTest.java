@@ -122,6 +122,25 @@ class TeardownExtensionTest {
     }
 
     @Test
+    void methodInjection_exceptionAtTest() throws Exception {
+        // Exercise
+        final TestExecutionSummary summary = runTestMethod(MethodInjectionExceptionCase.class, "exceptionAtTest");
+
+        // Verify
+        assertEquals(1, summary.getTestsFailedCount());
+        assertEquals(0, summary.getTestsSucceededCount());
+        assertThat(messages, is(contains("2", "1")));
+
+        final List<TestExecutionSummary.Failure> failures = summary.getFailures();
+        assertThat(failures.size(), is(1));
+        final TestExecutionSummary.Failure failure = failures.get(0);
+        final Throwable e = failure.getException();
+        assertThat(e, is(instanceOf(AssertionError.class)));
+        assertThat(e.getCause(), is(nullValue()));
+        assertThat(e.getSuppressed(), is(emptyArray()));
+    }
+
+    @Test
     void methodInjection_exceptionAtTeardown() throws Exception {
         // Exercise
         final TestExecutionSummary summary = runTestMethod(MethodInjectionExceptionCase.class, "exceptionAtTeardown");
@@ -349,6 +368,14 @@ class TeardownExtensionTest {
 
     @ExtendWith(TeardownExtension.class)
     static class MethodInjectionExceptionCase {
+
+        @Test
+        void exceptionAtTest(final TeardownRegistry teardown) throws Exception {
+            teardown.add(() -> messages.add("1"));
+            teardown.add(() -> messages.add("2"));
+
+            assertEquals(1, 2);
+        }
 
         @Test
         void exceptionAtTeardown(final TeardownRegistry teardown) throws Exception {
