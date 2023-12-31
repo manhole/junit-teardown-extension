@@ -124,7 +124,7 @@ class TeardownExtensionTest {
     @Test
     void methodInjection_exceptionAtTeardown() throws Exception {
         // Exercise
-        final TestExecutionSummary summary = runTest(MethodInjectionExceptionCase.class);
+        final TestExecutionSummary summary = runTestMethod(MethodInjectionExceptionCase.class, "exceptionAtTeardown");
 
         // Verify
         assertEquals(1, summary.getTestsFailedCount());

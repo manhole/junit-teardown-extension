@@ -1,5 +1,9 @@
 package com.tdder.junit.jupiter.extension;
 
+import java.lang.reflect.Method;
+import java.util.List;
+
+import org.junit.platform.commons.util.ReflectionUtils;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.launcher.Launcher;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
@@ -19,8 +23,9 @@ public class JUnitRunner {
     }
 
     static TestExecutionSummary runTestMethod(final Class<?> testClass, final String methodName) {
+        final Method testMethod = findMethod(testClass, methodName);
         final LauncherDiscoveryRequestBuilder requestBuilder = LauncherDiscoveryRequestBuilder.request();
-        requestBuilder.selectors(DiscoverySelectors.selectMethod(testClass, methodName));
+        requestBuilder.selectors(DiscoverySelectors.selectMethod(testClass, testMethod));
         final LauncherDiscoveryRequest discoveryRequest = requestBuilder.build();
         return runTest(discoveryRequest);
     }
@@ -33,6 +38,14 @@ public class JUnitRunner {
         final TestExecutionSummary summary = listener.getSummary();
         summary.getFailures().forEach(f -> f.getException().printStackTrace());
         return summary;
+    }
+
+    private static Method findMethod(final Class<?> testClass, final String methodName) {
+        final List<Method> methods = ReflectionUtils.findMethods(testClass, m -> m.getName().equals(methodName));
+        if (methods.size() != 1) {
+            throw new RuntimeException("Failed to specify one method:" + methods);
+        }
+        return methods.get(0);
     }
 
 }
