@@ -103,9 +103,9 @@ class TeardownExtensionTest {
     }
 
     @Test
-    void failed_at_test() throws Exception {
+    void fieldInjection_exceptionAtTest() throws Exception {
         // Exercise
-        final TestExecutionSummary summary = runTestMethod(ExceptionCase.class, "failed_at_test");
+        final TestExecutionSummary summary = runTestMethod(FieldInjectionExceptionCase.class, "exceptionAtTest");
 
         // Verify
         assertEquals(1, summary.getTestsFailedCount());
@@ -164,7 +164,8 @@ class TeardownExtensionTest {
     @Test
     void methodInjection_exceptionAtTestAndTeardown() throws Exception {
         // Exercise
-        final TestExecutionSummary summary = runTestMethod(MethodInjectionExceptionCase.class, "exceptionAtTestAndTeardown");
+        final TestExecutionSummary summary = runTestMethod(MethodInjectionExceptionCase.class,
+                "exceptionAtTestAndTeardown");
 
         // Verify
         assertEquals(1, summary.getTestsFailedCount());
@@ -352,12 +353,12 @@ class TeardownExtensionTest {
 
     @ExtendWith(TeardownExtension.class)
     @TestMethodOrder(MethodOrderer.MethodName.class) // make the test method execution order deterministic.
-    static class ExceptionCase {
+    static class FieldInjectionExceptionCase {
 
         private static TeardownRegistry teardown_;
 
         @Test
-        void failed_at_test() throws Exception {
+        void exceptionAtTest() throws Exception {
             teardown_.add(() -> messages.add("1"));
             teardown_.add(() -> messages.add("2"));
 
