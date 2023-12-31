@@ -166,6 +166,30 @@ class TeardownExtensionTest {
         assertThat(sup.getMessage(), is("2-ex"));
     }
 
+    @Test
+    void methodInjection_exceptionsAtTeardown() throws Exception {
+        // Exercise
+        final TestExecutionSummary summary = runTestMethod(MethodInjectionExceptionCase.class, "exceptionsAtTeardown");
+
+        // Verify
+        assertEquals(1, summary.getTestsFailedCount());
+        assertEquals(0, summary.getTestsSucceededCount());
+
+        assertThat(messages, is(contains("4", "3", "2", "1")));
+
+        final List<TestExecutionSummary.Failure> failures = summary.getFailures();
+        assertThat(failures.size(), is(1));
+        final TestExecutionSummary.Failure failure = failures.get(0);
+        final Throwable e = failure.getException();
+        assertThat(e, is(instanceOf(RuntimeException.class)));
+        assertThat(e.getMessage(), is("3-ex"));
+        assertThat(e.getCause(), is(nullValue()));
+        final Throwable[] suppressed = e.getSuppressed();
+        assertThat(suppressed.length, is(1));
+        final Throwable sup = suppressed[0];
+        assertThat(sup.getMessage(), is("2-ex"));
+    }
+
     @ExtendWith(TeardownExtension.class)
     static class MethodInjection {
 
@@ -346,6 +370,20 @@ class TeardownExtensionTest {
             teardown.add(() -> messages.add("3"));
 
             assertEquals(1, 2);
+        }
+
+        @Test
+        void exceptionsAtTeardown(final TeardownRegistry teardown) throws Exception {
+            teardown.add(() -> messages.add("1"));
+            teardown.add(() -> {
+                messages.add("2");
+                throw new RuntimeException("2-ex");
+            });
+            teardown.add(() -> {
+                messages.add("3");
+                throw new RuntimeException("3-ex");
+            });
+            teardown.add(() -> messages.add("4"));
         }
 
     }
