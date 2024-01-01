@@ -122,6 +122,27 @@ class TeardownExtensionTest {
     }
 
     @Test
+    void fieldInjection_exceptionAtTeardown() throws Exception {
+        // Exercise
+        final TestExecutionSummary summary = runTestMethod(FieldInjectionExceptionCase.class, "exceptionAtTeardown");
+
+        // Verify
+        assertEquals(1, summary.getTestsFailedCount());
+        assertEquals(0, summary.getTestsSucceededCount());
+
+        assertThat(messages, is(contains("3", "2", "1")));
+
+        final List<TestExecutionSummary.Failure> failures = summary.getFailures();
+        assertThat(failures.size(), is(1));
+        final TestExecutionSummary.Failure failure = failures.get(0);
+        final Throwable e = failure.getException();
+        assertThat(e, is(instanceOf(RuntimeException.class)));
+        assertThat(e.getMessage(), is("2-ex"));
+        assertThat(e.getCause(), is(nullValue()));
+        assertThat(e.getSuppressed(), is(emptyArray()));
+    }
+
+    @Test
     void methodInjection_exceptionAtTest() throws Exception {
         // Exercise
         final TestExecutionSummary summary = runTestMethod(MethodInjectionExceptionCase.class, "exceptionAtTest");
@@ -355,7 +376,7 @@ class TeardownExtensionTest {
     @TestMethodOrder(MethodOrderer.MethodName.class) // make the test method execution order deterministic.
     static class FieldInjectionExceptionCase {
 
-        private static TeardownRegistry teardown_;
+        private TeardownRegistry teardown_;
 
         @Test
         void exceptionAtTest() throws Exception {
@@ -363,6 +384,16 @@ class TeardownExtensionTest {
             teardown_.add(() -> messages.add("2"));
 
             assertEquals(1, 2);
+        }
+
+        @Test
+        void exceptionAtTeardown() throws Exception {
+            teardown_.add(() -> messages.add("1"));
+            teardown_.add(() -> {
+                messages.add("2");
+                throw new RuntimeException("2-ex");
+            });
+            teardown_.add(() -> messages.add("3"));
         }
 
     }

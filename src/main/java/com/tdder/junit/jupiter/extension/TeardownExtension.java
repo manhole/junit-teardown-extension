@@ -3,6 +3,7 @@ package com.tdder.junit.jupiter.extension;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -17,14 +18,10 @@ import org.junit.platform.commons.util.ReflectionUtils;
 
 public class TeardownExtension implements ParameterResolver, BeforeAllCallback, BeforeEachCallback, AfterEachCallback {
 
-    private final ExtensionContext.Namespace namespace_ = ExtensionContext.Namespace.create(getClass());
+    private static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(
+            TeardownExtension.class);
 
     private final Object STORE_KEY = TeardownRegistry.class;
-
-    @Override
-    public void beforeAll(final ExtensionContext extensionContext) throws Exception {
-        injectFields(extensionContext, null, extensionContext.getRequiredTestClass(), ReflectionUtils::isStatic);
-    }
 
     @Override
     public boolean supportsParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
@@ -36,9 +33,13 @@ public class TeardownExtension implements ParameterResolver, BeforeAllCallback, 
     @Override
     public Object resolveParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
             throws ParameterResolutionException {
-        final ExtensionContext.Store store = extensionContext.getStore(namespace_);
-        return store.getOrComputeIfAbsent(STORE_KEY, (v) -> new TeardownRegistryImpl(),
-                TeardownRegistryImpl.class);
+        final ExtensionContext.Store store = extensionContext.getStore(NAMESPACE);
+        return store.getOrComputeIfAbsent(STORE_KEY, (v) -> new TeardownRegistryImpl(), TeardownRegistryImpl.class);
+    }
+
+    @Override
+    public void beforeAll(final ExtensionContext extensionContext) throws Exception {
+        injectStaticFields(extensionContext);
     }
 
     @Override
@@ -46,44 +47,79 @@ public class TeardownExtension implements ParameterResolver, BeforeAllCallback, 
         final TestInstances requiredTestInstances = extensionContext.getRequiredTestInstances();
         final List<Object> allInstances = requiredTestInstances.getAllInstances();
         for (final Object instance : allInstances) {
-            injectFields(extensionContext, instance, instance.getClass(), ReflectionUtils::isNotStatic);
+            injectInstanceFields(extensionContext, instance);
         }
     }
 
-    private void injectFields(final ExtensionContext extensionContext, final Object testInstance,
-            final Class<?> testClass, final Predicate<Field> predicate) throws IllegalAccessException {
+    private void injectInstanceFields(final ExtensionContext extensionContext, final Object testInstance)
+            throws IllegalAccessException {
 
-        final Predicate<Field> fieldPredicate = predicate
-                .and(field -> field.getType().isAssignableFrom(TeardownRegistry.class))
-                .and(ReflectionUtils::isNotFinal);
-        final List<Field> fields = ReflectionUtils.findFields(testClass, fieldPredicate,
-                ReflectionUtils.HierarchyTraversalMode.TOP_DOWN);
+        final List<Field> fields = instanceFields(testInstance.getClass());
         for (final Field field : fields) {
-            final ExtensionContext.Namespace namespace = namespace_.append(field);
-            final ExtensionContext.Store store = extensionContext.getStore(namespace);
-            // ExtensionContext.Store.CloseableResource mechanism calls TeardownRegistry
+            final ExtensionContext.Store store = getStore(extensionContext, field);
             final TeardownRegistry teardownRegistry = store.getOrComputeIfAbsent(STORE_KEY,
                     (v) -> new TeardownRegistryImpl(), TeardownRegistryImpl.class);
 
             field.setAccessible(true);
             field.set(testInstance, teardownRegistry);
+        }
+    }
+
+    private void injectStaticFields(final ExtensionContext extensionContext)
+            throws IllegalAccessException {
+
+        final Class<?> testClass = extensionContext.getRequiredTestClass();
+        final List<Field> fields = staticFields(testClass);
+        for (final Field field : fields) {
+            final ExtensionContext.Store store = getStore(extensionContext, field);
+            final TeardownRegistry teardownRegistry = store.getOrComputeIfAbsent(STORE_KEY,
+                    (v) -> new TeardownRegistryImpl(), TeardownRegistryImpl.class);
+
+            field.setAccessible(true);
+            field.set(null, teardownRegistry);
 
             // Clear static field to null. Because it will remain in memory.
-            if (ReflectionUtils.isStatic(field)) {
-                final ExtensionContext.Store.CloseableResource closeableResource = () -> field.set(testInstance, null);
-                store.getOrComputeIfAbsent("cleanup_static_field", (v) -> closeableResource);
-            }
-
+            final ExtensionContext.Store.CloseableResource closeableResource = () -> field.set(null, null);
+            store.getOrComputeIfAbsent("cleanup_static_field", (v) -> closeableResource);
         }
     }
 
     @Override
     public void afterEach(final ExtensionContext extensionContext) throws Exception {
-        final ExtensionContext.Store store = extensionContext.getStore(namespace_);
-        final TeardownRegistryImpl teardown = store.get(STORE_KEY, TeardownRegistryImpl.class);
-        if (teardown != null) {
+        {
+            final ExtensionContext.Store store = extensionContext.getStore(NAMESPACE);
+            final TeardownRegistryImpl teardown = store.get(STORE_KEY, TeardownRegistryImpl.class);
+            if (teardown != null) {
+                teardown.close();
+            }
+        }
+
+        final Class<?> testClass = extensionContext.getRequiredTestClass();
+        final List<Field> fields = instanceFields(testClass);
+        for (final Field field : fields) {
+            final ExtensionContext.Store store = getStore(extensionContext, field);
+            final TeardownRegistryImpl teardown = store.get(STORE_KEY, TeardownRegistryImpl.class);
             teardown.close();
         }
+    }
+
+    private static List<Field> instanceFields(final Class<?> testClass) {
+        final Predicate<Field> predicate = ((Predicate<Field>) ReflectionUtils::isNotStatic)
+                .and(field -> field.getType().isAssignableFrom(TeardownRegistry.class))
+                .and(ReflectionUtils::isNotFinal);
+        return ReflectionUtils.findFields(testClass, predicate, ReflectionUtils.HierarchyTraversalMode.TOP_DOWN);
+    }
+
+    private static List<Field> staticFields(final Class<?> testClass) {
+        final Predicate<Field> predicate = ((Predicate<Field>) ReflectionUtils::isStatic)
+                .and(field -> field.getType().isAssignableFrom(TeardownRegistry.class))
+                .and(ReflectionUtils::isNotFinal);
+        return ReflectionUtils.findFields(testClass, predicate, ReflectionUtils.HierarchyTraversalMode.TOP_DOWN);
+    }
+
+    private ExtensionContext.Store getStore(final ExtensionContext extensionContext, final Field field) {
+        final ExtensionContext.Namespace namespace = NAMESPACE.append(field);
+        return extensionContext.getStore(namespace);
     }
 
 }
