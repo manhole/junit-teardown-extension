@@ -81,18 +81,17 @@ public class TeardownExtension
         }
     }
 
-    @Override
-    public void afterEach(final ExtensionContext extensionContext) throws Exception {
-        {
-            final ExtensionContext.Store store = extensionContext.getStore(NAMESPACE);
-            final TeardownRegistryImpl teardown = store.get(STORE_KEY, TeardownRegistryImpl.class);
-            if (teardown != null) {
-                teardown.close();
-            }
+    private void teardownParameters(final ExtensionContext extensionContext) throws Exception {
+        final ExtensionContext.Store store = extensionContext.getStore(NAMESPACE);
+        final TeardownRegistryImpl teardown = store.get(STORE_KEY, TeardownRegistryImpl.class);
+        if (teardown != null) {
+            teardown.close();
         }
+    }
 
-        final Class<?> testClass = extensionContext.getRequiredTestClass();
-        final List<Field> fields = instanceFields(testClass);
+    private void teardownInstanceFields(final ExtensionContext extensionContext, final Object testInstance)
+            throws Exception {
+        final List<Field> fields = instanceFields(testInstance.getClass());
         for (final Field field : fields) {
             final ExtensionContext.Store store = getStore(extensionContext, field);
             final TeardownRegistryImpl teardown = store.get(STORE_KEY, TeardownRegistryImpl.class);
@@ -100,8 +99,8 @@ public class TeardownExtension
         }
     }
 
-    @Override
-    public void afterAll(final ExtensionContext extensionContext) throws Exception {
+    private void teardownStaticFields(final ExtensionContext extensionContext) throws Exception {
+
         final Class<?> testClass = extensionContext.getRequiredTestClass();
         final List<Field> fields = staticFields(testClass);
         for (final Field field : fields) {
@@ -113,6 +112,22 @@ public class TeardownExtension
             field.setAccessible(true);
             field.set(null, null);
         }
+    }
+
+    @Override
+    public void afterEach(final ExtensionContext extensionContext) throws Exception {
+        teardownParameters(extensionContext);
+
+        final TestInstances requiredTestInstances = extensionContext.getRequiredTestInstances();
+        final List<Object> allInstances = requiredTestInstances.getAllInstances();
+        for (final Object instance : allInstances) {
+            teardownInstanceFields(extensionContext, instance);
+        }
+    }
+
+    @Override
+    public void afterAll(final ExtensionContext extensionContext) throws Exception {
+        teardownStaticFields(extensionContext);
     }
 
     private static List<Field> instanceFields(final Class<?> testClass) {
