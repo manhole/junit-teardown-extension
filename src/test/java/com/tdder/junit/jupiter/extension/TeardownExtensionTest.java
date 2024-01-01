@@ -143,6 +143,30 @@ class TeardownExtensionTest {
     }
 
     @Test
+    void fieldInjection_exceptionsAtTeardown() throws Exception {
+        // Exercise
+        final TestExecutionSummary summary = runTestMethod(FieldInjectionExceptionCase.class, "exceptionsAtTeardown");
+
+        // Verify
+        assertEquals(1, summary.getTestsFailedCount());
+        assertEquals(0, summary.getTestsSucceededCount());
+
+        assertThat(messages, is(contains("4", "3", "2", "1")));
+
+        final List<TestExecutionSummary.Failure> failures = summary.getFailures();
+        assertThat(failures.size(), is(1));
+        final TestExecutionSummary.Failure failure = failures.get(0);
+        final Throwable e = failure.getException();
+        assertThat(e, is(instanceOf(RuntimeException.class)));
+        assertThat(e.getMessage(), is("3-ex"));
+        assertThat(e.getCause(), is(nullValue()));
+        final Throwable[] suppressed = e.getSuppressed();
+        assertThat(suppressed.length, is(1));
+        final Throwable sup = suppressed[0];
+        assertThat(sup.getMessage(), is("2-ex"));
+    }
+
+    @Test
     void methodInjection_exceptionAtTest() throws Exception {
         // Exercise
         final TestExecutionSummary summary = runTestMethod(MethodInjectionExceptionCase.class, "exceptionAtTest");
@@ -394,6 +418,20 @@ class TeardownExtensionTest {
                 throw new RuntimeException("2-ex");
             });
             teardown_.add(() -> messages.add("3"));
+        }
+
+        @Test
+        void exceptionsAtTeardown() throws Exception {
+            teardown_.add(() -> messages.add("1"));
+            teardown_.add(() -> {
+                messages.add("2");
+                throw new RuntimeException("2-ex");
+            });
+            teardown_.add(() -> {
+                messages.add("3");
+                throw new RuntimeException("3-ex");
+            });
+            teardown_.add(() -> messages.add("4"));
         }
 
     }
