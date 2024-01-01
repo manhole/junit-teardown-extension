@@ -143,6 +143,31 @@ class TeardownExtensionTest {
     }
 
     @Test
+    void fieldInjection_exceptionAtTestAndTeardown() throws Exception {
+        // Exercise
+        final TestExecutionSummary summary = runTestMethod(FieldInjectionExceptionCase.class,
+                "exceptionAtTestAndTeardown");
+
+        // Verify
+        assertEquals(1, summary.getTestsFailedCount());
+        assertEquals(0, summary.getTestsSucceededCount());
+
+        assertThat(messages, is(contains("3", "2", "1")));
+
+        final List<TestExecutionSummary.Failure> failures = summary.getFailures();
+        assertThat(failures.size(), is(1));
+        final TestExecutionSummary.Failure failure = failures.get(0);
+        final Throwable e = failure.getException();
+        assertThat(e, is(instanceOf(AssertionError.class)));
+        assertThat(e.getMessage(), is("expected: <1> but was: <2>"));
+        assertThat(e.getCause(), is(nullValue()));
+        final Throwable[] suppressed = e.getSuppressed();
+        assertThat(suppressed.length, is(1));
+        final Throwable sup = suppressed[0];
+        assertThat(sup.getMessage(), is("2-ex"));
+    }
+
+    @Test
     void fieldInjection_exceptionsAtTeardown() throws Exception {
         // Exercise
         final TestExecutionSummary summary = runTestMethod(FieldInjectionExceptionCase.class, "exceptionsAtTeardown");
@@ -397,7 +422,6 @@ class TeardownExtensionTest {
     }
 
     @ExtendWith(TeardownExtension.class)
-    @TestMethodOrder(MethodOrderer.MethodName.class) // make the test method execution order deterministic.
     static class FieldInjectionExceptionCase {
 
         private TeardownRegistry teardown_;
@@ -418,6 +442,18 @@ class TeardownExtensionTest {
                 throw new RuntimeException("2-ex");
             });
             teardown_.add(() -> messages.add("3"));
+        }
+
+        @Test
+        void exceptionAtTestAndTeardown() throws Exception {
+            teardown_.add(() -> messages.add("1"));
+            teardown_.add(() -> {
+                messages.add("2");
+                throw new RuntimeException("2-ex");
+            });
+            teardown_.add(() -> messages.add("3"));
+
+            assertEquals(1, 2);
         }
 
         @Test
