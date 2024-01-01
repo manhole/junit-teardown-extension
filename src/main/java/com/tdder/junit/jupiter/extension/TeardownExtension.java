@@ -3,9 +3,9 @@ package com.tdder.junit.jupiter.extension;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Predicate;
 
+import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
@@ -16,7 +16,8 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.jupiter.api.extension.TestInstances;
 import org.junit.platform.commons.util.ReflectionUtils;
 
-public class TeardownExtension implements ParameterResolver, BeforeAllCallback, BeforeEachCallback, AfterEachCallback {
+public class TeardownExtension
+        implements ParameterResolver, BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback {
 
     private static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(
             TeardownExtension.class);
@@ -77,10 +78,6 @@ public class TeardownExtension implements ParameterResolver, BeforeAllCallback, 
 
             field.setAccessible(true);
             field.set(null, teardownRegistry);
-
-            // Clear static field to null. Because it will remain in memory.
-            final ExtensionContext.Store.CloseableResource closeableResource = () -> field.set(null, null);
-            store.getOrComputeIfAbsent("cleanup_static_field", (v) -> closeableResource);
         }
     }
 
@@ -100,6 +97,21 @@ public class TeardownExtension implements ParameterResolver, BeforeAllCallback, 
             final ExtensionContext.Store store = getStore(extensionContext, field);
             final TeardownRegistryImpl teardown = store.get(STORE_KEY, TeardownRegistryImpl.class);
             teardown.close();
+        }
+    }
+
+    @Override
+    public void afterAll(final ExtensionContext extensionContext) throws Exception {
+        final Class<?> testClass = extensionContext.getRequiredTestClass();
+        final List<Field> fields = staticFields(testClass);
+        for (final Field field : fields) {
+            final ExtensionContext.Store store = getStore(extensionContext, field);
+            final TeardownRegistryImpl teardown = store.get(STORE_KEY, TeardownRegistryImpl.class);
+            teardown.close();
+
+            // Clear static field to null. Because it will remain in memory.
+            field.setAccessible(true);
+            field.set(null, null);
         }
     }
 

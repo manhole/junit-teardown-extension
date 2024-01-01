@@ -3,9 +3,7 @@ package com.tdder.junit.jupiter.extension;
 import java.util.Deque;
 import java.util.LinkedList;
 
-import org.junit.jupiter.api.extension.ExtensionContext;
-
-class TeardownRegistryImpl implements TeardownRegistry, ExtensionContext.Store.CloseableResource {
+class TeardownRegistryImpl implements TeardownRegistry {
 
     private final Deque<AutoCloseable> tasks_ = new LinkedList<>();
 
@@ -19,7 +17,6 @@ class TeardownRegistryImpl implements TeardownRegistry, ExtensionContext.Store.C
         return tasks_.size();
     }
 
-    @Override
     public void close() throws Exception {
         Exception ex = null;
         while (!tasks_.isEmpty()) {
