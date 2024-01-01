@@ -280,6 +280,38 @@ class TeardownExtensionTest {
         assertThat(sup.getMessage(), is("2-ex"));
     }
 
+    @Test
+    void methodInjection_exceptionsAtTestAndTeardown() throws Exception {
+        // Exercise
+        final TestExecutionSummary summary = runTestMethod(MethodInjectionExceptionCase.class,
+                "exceptionsAtTestAndTeardown");
+
+        // Verify
+        assertEquals(1, summary.getTestsFailedCount());
+        assertEquals(0, summary.getTestsSucceededCount());
+
+        assertThat(messages, is(contains("4", "3", "2", "1")));
+
+        final List<TestExecutionSummary.Failure> failures = summary.getFailures();
+        assertThat(failures.size(), is(1));
+        final TestExecutionSummary.Failure failure = failures.get(0);
+        final Throwable e = failure.getException();
+        assertThat(e, is(instanceOf(AssertionError.class)));
+        assertThat(e.getMessage(), is("expected: <1> but was: <2>"));
+        assertThat(e.getCause(), is(nullValue()));
+
+        final Throwable[] suppressed = e.getSuppressed();
+        assertThat(suppressed.length, is(2));
+        {
+            final Throwable sup = suppressed[0];
+            assertThat(sup.getMessage(), is("3-ex"));
+        }
+        {
+            final Throwable sup = suppressed[1];
+            assertThat(sup.getMessage(), is("2-ex"));
+        }
+    }
+
     @ExtendWith(TeardownExtension.class)
     static class MethodInjection {
 
@@ -517,6 +549,22 @@ class TeardownExtensionTest {
                 throw new RuntimeException("3-ex");
             });
             teardown.add(() -> messages.add("4"));
+        }
+
+        @Test
+        void exceptionsAtTestAndTeardown(final TeardownRegistry teardown) throws Exception {
+            teardown.add(() -> messages.add("1"));
+            teardown.add(() -> {
+                messages.add("2");
+                throw new RuntimeException("2-ex");
+            });
+            teardown.add(() -> {
+                messages.add("3");
+                throw new RuntimeException("3-ex");
+            });
+            teardown.add(() -> messages.add("4"));
+
+            assertEquals(1, 2);
         }
 
     }

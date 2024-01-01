@@ -17,23 +17,15 @@ class TeardownRegistryImpl implements TeardownRegistry {
         return tasks_.size();
     }
 
-    public void close() throws Exception {
-        Exception ex = null;
+    public void teardown(final ExceptionHandler exceptionHandler) throws Exception {
         while (!tasks_.isEmpty()) {
             // teardown in reverse order
             final AutoCloseable task = tasks_.removeLast();
             try {
                 task.close();
             } catch (final Exception e) {
-                if (ex == null) {
-                    ex = e;
-                } else {
-                    ex.addSuppressed(e);
-                }
+                exceptionHandler.add(e);
             }
-        }
-        if (ex != null) {
-            throw ex;
         }
     }
 

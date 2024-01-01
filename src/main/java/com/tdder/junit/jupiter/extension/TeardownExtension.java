@@ -3,6 +3,7 @@ package com.tdder.junit.jupiter.extension;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -85,33 +86,40 @@ public class TeardownExtension
         final ExtensionContext.Store store = extensionContext.getStore(NAMESPACE);
         final TeardownRegistryImpl teardown = store.get(STORE_KEY, TeardownRegistryImpl.class);
         if (teardown != null) {
-            teardown.close();
+            final ExceptionHandler exceptionHandler = ExceptionHandler.determine(extensionContext);
+            teardown.teardown(exceptionHandler);
+            exceptionHandler.throwIfNeeded();
         }
     }
 
     private void teardownInstanceFields(final ExtensionContext extensionContext, final Object testInstance)
             throws Exception {
+
+        final ExceptionHandler exceptionHandler = ExceptionHandler.determine(extensionContext);
         final List<Field> fields = instanceFields(testInstance.getClass());
         for (final Field field : fields) {
             final ExtensionContext.Store store = getStore(extensionContext, field);
             final TeardownRegistryImpl teardown = store.get(STORE_KEY, TeardownRegistryImpl.class);
-            teardown.close();
+            teardown.teardown(exceptionHandler);
         }
+        exceptionHandler.throwIfNeeded();
     }
 
     private void teardownStaticFields(final ExtensionContext extensionContext) throws Exception {
 
+        final ExceptionHandler exceptionHandler = ExceptionHandler.determine(extensionContext);
         final Class<?> testClass = extensionContext.getRequiredTestClass();
         final List<Field> fields = staticFields(testClass);
         for (final Field field : fields) {
             final ExtensionContext.Store store = getStore(extensionContext, field);
             final TeardownRegistryImpl teardown = store.get(STORE_KEY, TeardownRegistryImpl.class);
-            teardown.close();
+            teardown.teardown(exceptionHandler);
 
             // Clear static field to null. Because it will remain in memory.
             field.setAccessible(true);
             field.set(null, null);
         }
+        exceptionHandler.throwIfNeeded();
     }
 
     @Override
