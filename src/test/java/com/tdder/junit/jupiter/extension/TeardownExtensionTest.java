@@ -8,13 +8,17 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.emptyArray;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
@@ -91,7 +95,8 @@ class TeardownExtensionTest {
 
         assertEquals(0, summary.getTestsFailedCount());
         assertEquals(2, summary.getTestsSucceededCount());
-        assertThat(messages, is(contains("1-2", "1-1", "setUp succeeded1", "2-2", "2-1", "setUp succeeded2", "beforeAll")));
+        assertThat(messages,
+                is(contains("1-2", "1-1", "setUp succeeded1", "2-2", "2-1", "setUp succeeded2", "beforeAll")));
     }
 
     @Test
@@ -320,6 +325,37 @@ class TeardownExtensionTest {
             final Throwable sup = suppressed[1];
             assertThat(sup.getMessage(), is("2-ex"));
         }
+    }
+
+    @Test
+    void mixCase_class() throws Exception {
+        // Exercise
+        final TestExecutionSummary summary = runTest(MixedCase.class);
+
+        // Verify
+        assertEquals(0, summary.getTestsFailedCount());
+        assertEquals(2, summary.getTestsSucceededCount());
+        assertThat(messages,
+                is(contains("tearDown1 test1", "1-2", "1-1", "setUp1 test1"
+                        , "tearDown1 test2", "2-2", "2-1", "setUp1 test2"
+                        , "afterAll field", "afterAll parameter", "tearDown2 test2", "2-3", "setUp2 test2",
+                        "tearDown2 test1", "1-3", "setUp2 test1", "beforeAll field", "beforeAll parameter")
+                )
+        );
+    }
+
+    @Test
+    void mixCase_method() throws Exception {
+        // Exercise
+        final TestExecutionSummary summary = runTestMethod(MixedCase.class, "test1");
+
+        // Verify
+        assertEquals(0, summary.getTestsFailedCount());
+        assertEquals(1, summary.getTestsSucceededCount());
+        assertThat(messages,
+                is(contains("tearDown1 test1", "1-2", "1-1", "setUp1 test1"
+                        , "afterAll field", "afterAll parameter", "tearDown2 test1", "1-3", "setUp2 test1",
+                        "beforeAll field", "beforeAll parameter")));
     }
 
     @ExtendWith(TeardownExtension.class)
@@ -606,6 +642,80 @@ class TeardownExtensionTest {
             teardown.add(() -> messages.add("4"));
 
             assertEquals(1, 2);
+        }
+
+    }
+
+    @ExtendWith(TeardownExtension.class)
+    @TestMethodOrder(MethodOrderer.MethodName.class) // make the test method execution order deterministic.
+    static class MixedCase {
+
+        private static TeardownRegistry staticTeardown_;
+
+        private TeardownRegistry teardown_;
+
+        @BeforeAll
+        static void beforeAll(final TeardownRegistry teardown) {
+            teardown.add(() -> messages.add("beforeAll parameter"));
+            staticTeardown_.add(() -> messages.add("beforeAll field"));
+
+            // over-testing. This behavior may change in the future.
+            assertThat(teardown, is(sameInstance(staticTeardown_)));
+        }
+
+        @AfterAll
+        static void afterAll(final TeardownRegistry teardown) {
+            teardown.add(() -> messages.add("afterAll parameter"));
+            staticTeardown_.add(() -> messages.add("afterAll field"));
+
+            // over-testing. This behavior may change in the future.
+            assertThat(teardown, is(sameInstance(staticTeardown_)));
+        }
+
+        @BeforeEach
+        void setUp(final TeardownRegistry teardown, final TestInfo testInfo) {
+            assertThat(((TeardownRegistryImpl) teardown).size(), is(0));
+            teardown.add(() -> messages.add("setUp1 " + testInfo.getTestMethod().get().getName()));
+            staticTeardown_.add(() -> messages.add("setUp2 " + testInfo.getTestMethod().get().getName()));
+
+            assertThat(teardown, is(not(sameInstance(staticTeardown_))));
+            // over-testing. This behavior may change in the future.
+            assertThat(teardown, is(sameInstance(teardown_)));
+        }
+
+        @AfterEach
+        void tearDown(final TeardownRegistry teardown, final TestInfo testInfo) {
+            assertThat(((TeardownRegistryImpl) teardown).size(), is(3));
+            teardown.add(() -> messages.add("tearDown1 " + testInfo.getTestMethod().get().getName()));
+            staticTeardown_.add(() -> messages.add("tearDown2 " + testInfo.getTestMethod().get().getName()));
+
+            assertThat(teardown, is(not(sameInstance(staticTeardown_))));
+            // over-testing. This behavior may change in the future.
+            assertThat(teardown, is(sameInstance(teardown_)));
+        }
+
+        @Test
+        void test1(final TeardownRegistry teardown) throws Exception {
+            assertThat(((TeardownRegistryImpl) teardown).size(), is(1));
+            teardown.add(() -> messages.add("1-1"));
+            teardown.add(() -> messages.add("1-2"));
+            staticTeardown_.add(() -> messages.add("1-3"));
+
+            assertThat(teardown, is(not(sameInstance(staticTeardown_))));
+            // over-testing. This behavior may change in the future.
+            assertThat(teardown, is(sameInstance(teardown_)));
+        }
+
+        @Test
+        void test2(final TeardownRegistry teardown) throws Exception {
+            assertThat(((TeardownRegistryImpl) teardown).size(), is(1));
+            teardown.add(() -> messages.add("2-1"));
+            teardown.add(() -> messages.add("2-2"));
+            staticTeardown_.add(() -> messages.add("2-3"));
+
+            assertThat(teardown, is(not(sameInstance(staticTeardown_))));
+            // over-testing. This behavior may change in the future.
+            assertThat(teardown, is(sameInstance(teardown_)));
         }
 
     }
