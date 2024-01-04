@@ -86,7 +86,7 @@ class TeardownExtensionTest {
 
         assertEquals(0, summary.getTestsFailedCount());
         assertEquals(2, summary.getTestsSucceededCount());
-        assertThat(messages, is(contains("1-2", "1-1", "setUp succeeded1", "2-2", "2-1", "setUp succeeded2")));
+        assertThat(messages, is(contains("1-2", "1-1", "test1-setUp", "2-2", "2-1", "test2-setUp")));
     }
 
     @Test
@@ -96,7 +96,7 @@ class TeardownExtensionTest {
         assertEquals(0, summary.getTestsFailedCount());
         assertEquals(2, summary.getTestsSucceededCount());
         assertThat(messages,
-                is(contains("1-2", "1-1", "setUp succeeded1", "2-2", "2-1", "setUp succeeded2", "beforeAll")));
+                is(contains("1-2", "1-1", "test1-setUp", "2-2", "2-1", "test2-setUp", "beforeAll")));
     }
 
     @Test
@@ -105,7 +105,7 @@ class TeardownExtensionTest {
 
         assertEquals(0, summary.getTestsFailedCount());
         assertEquals(2, summary.getTestsSucceededCount());
-        assertThat(messages, is(contains("1-2", "1-1", "setUp succeeded1", "2-2", "2-1", "setUp succeeded2")));
+        assertThat(messages, is(contains("1-2", "1-1", "test1-setUp", "2-2", "2-1", "test2-setUp")));
     }
 
     @Test
@@ -114,7 +114,7 @@ class TeardownExtensionTest {
 
         assertEquals(0, summary.getTestsFailedCount());
         assertEquals(2, summary.getTestsSucceededCount());
-        assertThat(messages, is(contains("2-2", "2-1", "setUp succeeded2", "1-2", "1-1", "setUp succeeded1")));
+        assertThat(messages, is(contains("2-2", "2-1", "test2-setUp", "1-2", "1-1", "test1-setUp")));
     }
 
     @Test
@@ -336,10 +336,10 @@ class TeardownExtensionTest {
         assertEquals(0, summary.getTestsFailedCount());
         assertEquals(2, summary.getTestsSucceededCount());
         assertThat(messages,
-                is(contains("tearDown1 test1", "1-2", "1-1", "setUp1 test1"
-                        , "tearDown1 test2", "2-2", "2-1", "setUp1 test2"
-                        , "afterAll field", "afterAll parameter", "tearDown2 test2", "2-3", "setUp2 test2",
-                        "tearDown2 test1", "1-3", "setUp2 test1", "beforeAll field", "beforeAll parameter")
+                is(contains("test1-tearDown1", "1-2", "1-1", "test1-setUp1"
+                        , "test2-tearDown1", "2-2", "2-1", "test2-setUp1"
+                        , "afterAll2", "afterAll1", "test2-tearDown2", "2-3", "test2-setUp2",
+                        "test1-tearDown2", "1-3", "test1-setUp2", "beforeAll2", "beforeAll1")
                 )
         );
     }
@@ -353,16 +353,16 @@ class TeardownExtensionTest {
         assertEquals(0, summary.getTestsFailedCount());
         assertEquals(1, summary.getTestsSucceededCount());
         assertThat(messages,
-                is(contains("tearDown1 test1", "1-2", "1-1", "setUp1 test1"
-                        , "afterAll field", "afterAll parameter", "tearDown2 test1", "1-3", "setUp2 test1",
-                        "beforeAll field", "beforeAll parameter")));
+                is(contains("test1-tearDown1", "1-2", "1-1", "test1-setUp1"
+                        , "afterAll2", "afterAll1", "test1-tearDown2", "1-3", "test1-setUp2",
+                        "beforeAll2", "beforeAll1")));
     }
 
     @ExtendWith(TeardownExtension.class)
     static class MethodInjection {
 
         @Test
-        void succeeded1(final TeardownRegistry teardown) throws Exception {
+        void test1(final TeardownRegistry teardown) throws Exception {
             assertThat(teardown, is(notNullValue()));
 
             teardown.add(() -> messages.add("1"));
@@ -395,7 +395,7 @@ class TeardownExtensionTest {
         private TeardownRegistry teardown_;
 
         @Test
-        void succeeded1() throws Exception {
+        void test1() throws Exception {
             teardown_.add(() -> messages.add("1"));
             teardown_.add(() -> messages.add("2"));
             teardown_.add(() -> messages.add("3"));
@@ -410,7 +410,7 @@ class TeardownExtensionTest {
         private static TeardownRegistry teardown_;
 
         @Test
-        void succeeded1() throws Exception {
+        void test1() throws Exception {
             teardown_.add(() -> messages.add("1"));
             teardown_.add(() -> messages.add("2"));
             teardown_.add(() -> messages.add("3"));
@@ -425,18 +425,18 @@ class TeardownExtensionTest {
         @BeforeEach
         void setUp(final TeardownRegistry teardown, final TestInfo testInfo) {
             assertThat(((TeardownRegistryImpl) teardown).size(), is(0));
-            teardown.add(() -> messages.add("setUp " + testInfo.getTestMethod().get().getName()));
+            teardown.add(() -> messages.add(testInfo.getTestMethod().get().getName() + "-setUp"));
         }
 
         @Test
-        void succeeded1(final TeardownRegistry teardown) throws Exception {
+        void test1(final TeardownRegistry teardown) throws Exception {
             assertThat(((TeardownRegistryImpl) teardown).size(), is(1));
             teardown.add(() -> messages.add("1-1"));
             teardown.add(() -> messages.add("1-2"));
         }
 
         @Test
-        void succeeded2(final TeardownRegistry teardown) throws Exception {
+        void test2(final TeardownRegistry teardown) throws Exception {
             assertThat(((TeardownRegistryImpl) teardown).size(), is(1));
             teardown.add(() -> messages.add("2-1"));
             teardown.add(() -> messages.add("2-2"));
@@ -456,18 +456,18 @@ class TeardownExtensionTest {
         @BeforeEach
         void setUp(final TeardownRegistry teardown, final TestInfo testInfo) {
             assertThat(((TeardownRegistryImpl) teardown).size(), is(0));
-            teardown.add(() -> messages.add("setUp " + testInfo.getTestMethod().get().getName()));
+            teardown.add(() -> messages.add(testInfo.getTestMethod().get().getName() + "-setUp"));
         }
 
         @Test
-        void succeeded1(final TeardownRegistry teardown) throws Exception {
+        void test1(final TeardownRegistry teardown) throws Exception {
             assertThat(((TeardownRegistryImpl) teardown).size(), is(1));
             teardown.add(() -> messages.add("1-1"));
             teardown.add(() -> messages.add("1-2"));
         }
 
         @Test
-        void succeeded2(final TeardownRegistry teardown) throws Exception {
+        void test2(final TeardownRegistry teardown) throws Exception {
             assertThat(((TeardownRegistryImpl) teardown).size(), is(1));
             teardown.add(() -> messages.add("2-1"));
             teardown.add(() -> messages.add("2-2"));
@@ -484,18 +484,18 @@ class TeardownExtensionTest {
         @BeforeEach
         void setUp(final TestInfo testInfo) {
             assertThat(((TeardownRegistryImpl) teardown_).size(), is(0));
-            teardown_.add(() -> messages.add("setUp " + testInfo.getTestMethod().get().getName()));
+            teardown_.add(() -> messages.add(testInfo.getTestMethod().get().getName() + "-setUp"));
         }
 
         @Test
-        void succeeded1() throws Exception {
+        void test1() throws Exception {
             assertThat(((TeardownRegistryImpl) teardown_).size(), is(1));
             teardown_.add(() -> messages.add("1-1"));
             teardown_.add(() -> messages.add("1-2"));
         }
 
         @Test
-        void succeeded2() throws Exception {
+        void test2() throws Exception {
             assertThat(((TeardownRegistryImpl) teardown_).size(), is(1));
             teardown_.add(() -> messages.add("2-1"));
             teardown_.add(() -> messages.add("2-2"));
@@ -511,18 +511,18 @@ class TeardownExtensionTest {
 
         @BeforeEach
         void setUp(final TestInfo testInfo) {
-            teardown_.add(() -> messages.add("setUp " + testInfo.getTestMethod().get().getName()));
+            teardown_.add(() -> messages.add(testInfo.getTestMethod().get().getName() + "-setUp"));
         }
 
         @Test
-        void succeeded1() throws Exception {
+        void test1() throws Exception {
             assertThat(((TeardownRegistryImpl) teardown_).size(), is(1));
             teardown_.add(() -> messages.add("1-1"));
             teardown_.add(() -> messages.add("1-2"));
         }
 
         @Test
-        void succeeded2() throws Exception {
+        void test2() throws Exception {
             assertThat(((TeardownRegistryImpl) teardown_).size(), is(4));
             teardown_.add(() -> messages.add("2-1"));
             teardown_.add(() -> messages.add("2-2"));
@@ -656,8 +656,8 @@ class TeardownExtensionTest {
 
         @BeforeAll
         static void beforeAll(final TeardownRegistry teardown) {
-            teardown.add(() -> messages.add("beforeAll parameter"));
-            staticTeardown_.add(() -> messages.add("beforeAll field"));
+            teardown.add(() -> messages.add("beforeAll1"));
+            staticTeardown_.add(() -> messages.add("beforeAll2"));
 
             // over-testing. This behavior may change in the future.
             assertThat(teardown, is(sameInstance(staticTeardown_)));
@@ -665,8 +665,8 @@ class TeardownExtensionTest {
 
         @AfterAll
         static void afterAll(final TeardownRegistry teardown) {
-            teardown.add(() -> messages.add("afterAll parameter"));
-            staticTeardown_.add(() -> messages.add("afterAll field"));
+            teardown.add(() -> messages.add("afterAll1"));
+            staticTeardown_.add(() -> messages.add("afterAll2"));
 
             // over-testing. This behavior may change in the future.
             assertThat(teardown, is(sameInstance(staticTeardown_)));
@@ -675,8 +675,8 @@ class TeardownExtensionTest {
         @BeforeEach
         void setUp(final TeardownRegistry teardown, final TestInfo testInfo) {
             assertThat(((TeardownRegistryImpl) teardown).size(), is(0));
-            teardown.add(() -> messages.add("setUp1 " + testInfo.getTestMethod().get().getName()));
-            staticTeardown_.add(() -> messages.add("setUp2 " + testInfo.getTestMethod().get().getName()));
+            teardown.add(() -> messages.add(testInfo.getTestMethod().get().getName() + "-setUp1"));
+            staticTeardown_.add(() -> messages.add(testInfo.getTestMethod().get().getName() + "-setUp2"));
 
             assertThat(teardown, is(not(sameInstance(staticTeardown_))));
             // over-testing. This behavior may change in the future.
@@ -686,8 +686,8 @@ class TeardownExtensionTest {
         @AfterEach
         void tearDown(final TeardownRegistry teardown, final TestInfo testInfo) {
             assertThat(((TeardownRegistryImpl) teardown).size(), is(3));
-            teardown.add(() -> messages.add("tearDown1 " + testInfo.getTestMethod().get().getName()));
-            staticTeardown_.add(() -> messages.add("tearDown2 " + testInfo.getTestMethod().get().getName()));
+            teardown.add(() -> messages.add(testInfo.getTestMethod().get().getName() + "-tearDown1"));
+            staticTeardown_.add(() -> messages.add(testInfo.getTestMethod().get().getName() + "-tearDown2"));
 
             assertThat(teardown, is(not(sameInstance(staticTeardown_))));
             // over-testing. This behavior may change in the future.
