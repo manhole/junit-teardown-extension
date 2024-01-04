@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -82,6 +83,15 @@ class TeardownExtensionTest {
         assertEquals(0, summary.getTestsFailedCount());
         assertEquals(2, summary.getTestsSucceededCount());
         assertThat(messages, is(contains("1-2", "1-1", "setUp succeeded1", "2-2", "2-1", "setUp succeeded2")));
+    }
+
+    @Test
+    void beforeAllMethodInjection_independenceOnMultipleTestMethods() throws Exception {
+        final TestExecutionSummary summary = runTest(BeforeAllMethodInjection_IndependenceOnMultipleTestMethods.class);
+
+        assertEquals(0, summary.getTestsFailedCount());
+        assertEquals(2, summary.getTestsSucceededCount());
+        assertThat(messages, is(contains("1-2", "1-1", "setUp succeeded1", "2-2", "2-1", "setUp succeeded2", "beforeAll")));
     }
 
     @Test
@@ -375,6 +385,37 @@ class TeardownExtensionTest {
     @ExtendWith(TeardownExtension.class)
     @TestMethodOrder(MethodOrderer.MethodName.class) // make the test method execution order deterministic.
     static class MethodInjection_IndependenceOnMultipleTestMethods {
+
+        @BeforeEach
+        void setUp(final TeardownRegistry teardown, final TestInfo testInfo) {
+            assertThat(((TeardownRegistryImpl) teardown).size(), is(0));
+            teardown.add(() -> messages.add("setUp " + testInfo.getTestMethod().get().getName()));
+        }
+
+        @Test
+        void succeeded1(final TeardownRegistry teardown) throws Exception {
+            assertThat(((TeardownRegistryImpl) teardown).size(), is(1));
+            teardown.add(() -> messages.add("1-1"));
+            teardown.add(() -> messages.add("1-2"));
+        }
+
+        @Test
+        void succeeded2(final TeardownRegistry teardown) throws Exception {
+            assertThat(((TeardownRegistryImpl) teardown).size(), is(1));
+            teardown.add(() -> messages.add("2-1"));
+            teardown.add(() -> messages.add("2-2"));
+        }
+
+    }
+
+    @ExtendWith(TeardownExtension.class)
+    @TestMethodOrder(MethodOrderer.MethodName.class) // make the test method execution order deterministic.
+    static class BeforeAllMethodInjection_IndependenceOnMultipleTestMethods {
+
+        @BeforeAll
+        static void beforeAll(final TeardownRegistry teardown) {
+            teardown.add(() -> messages.add("beforeAll"));
+        }
 
         @BeforeEach
         void setUp(final TeardownRegistry teardown, final TestInfo testInfo) {
