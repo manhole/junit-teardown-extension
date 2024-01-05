@@ -28,9 +28,8 @@ tasks.withType(SourceTask)
         .each { t -> t.options.encoding = 'UTF-8' }
 
 tasks.withType(Test).configureEach {
-    useJUnitPlatform()
-    filter {
-        includeTestsMatching "*Test"
+    useJUnitPlatform() {
+        excludeTags("used-from-test")
     }
 }
 

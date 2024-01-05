@@ -358,6 +358,7 @@ class TeardownExtensionTest {
                         "beforeAll2", "beforeAll1")));
     }
 
+    @UsedFromTest
     @ExtendWith(TeardownExtension.class)
     static class MethodInjection {
 
@@ -372,6 +373,7 @@ class TeardownExtensionTest {
 
     }
 
+    @UsedFromTest
     @ExtendWith(TeardownExtension.class)
     static class ConstructorInjection {
 
@@ -388,6 +390,7 @@ class TeardownExtensionTest {
 
     }
 
+    @UsedFromTest
     @ExtendWith(TeardownExtension.class)
     static class FieldInjection {
 
@@ -403,6 +406,7 @@ class TeardownExtensionTest {
 
     }
 
+    @UsedFromTest
     @ExtendWith(TeardownExtension.class)
     static class StaticFieldInjection {
 
@@ -418,6 +422,7 @@ class TeardownExtensionTest {
 
     }
 
+    @UsedFromTest
     @ExtendWith(TeardownExtension.class)
     @TestMethodOrder(MethodOrderer.MethodName.class) // make the test method execution order deterministic.
     static class MethodInjection_IndependenceOnMultipleTestMethods {
@@ -444,6 +449,7 @@ class TeardownExtensionTest {
 
     }
 
+    @UsedFromTest
     @ExtendWith(TeardownExtension.class)
     @TestMethodOrder(MethodOrderer.MethodName.class) // make the test method execution order deterministic.
     static class BeforeAllMethodInjection_IndependenceOnMultipleTestMethods {
@@ -475,6 +481,7 @@ class TeardownExtensionTest {
 
     }
 
+    @UsedFromTest
     @ExtendWith(TeardownExtension.class)
     @TestMethodOrder(MethodOrderer.MethodName.class) // make the test method execution order deterministic.
     static class FieldInjection_IndependenceOnMultipleTestMethods {
@@ -503,6 +510,7 @@ class TeardownExtensionTest {
 
     }
 
+    @UsedFromTest
     @ExtendWith(TeardownExtension.class)
     @TestMethodOrder(MethodOrderer.MethodName.class) // make the test method execution order deterministic.
     static class StaticFieldInjection_IndependenceOnMultipleTestMethods {
@@ -530,6 +538,7 @@ class TeardownExtensionTest {
 
     }
 
+    @UsedFromTest
     @ExtendWith(TeardownExtension.class)
     static class FieldInjectionExceptionCase {
 
@@ -581,6 +590,7 @@ class TeardownExtensionTest {
 
     }
 
+    @UsedFromTest
     @ExtendWith(TeardownExtension.class)
     static class MethodInjectionExceptionCase {
 
@@ -646,6 +656,7 @@ class TeardownExtensionTest {
 
     }
 
+    @UsedFromTest
     @ExtendWith(TeardownExtension.class)
     @TestMethodOrder(MethodOrderer.MethodName.class) // make the test method execution order deterministic.
     static class MixedCase {
