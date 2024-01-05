@@ -1,16 +1,13 @@
-# Teardown Extension
+package com.tdder.junit.jupiter.extension.example;
 
-TeardownExtension is an extension for JUnit Jupiter. Provides _Automated Teardown_ mechanism.
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-- Make it easier for developers to read and write teardown code.
-- Ensuring the test fixtures are torn down.
-- Inspired by xUTP's [Automated Teardown](http://xunitpatterns.com/Automated%20Teardown.html).
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-## Example
+import com.tdder.junit.jupiter.extension.TeardownExtension;
+import com.tdder.junit.jupiter.extension.TeardownRegistry;
 
-Example usage:
-
-```java
 // Annotate TeardownExtension
 @ExtendWith(TeardownExtension.class)
 class WithTeardownRegistryDemo {
@@ -53,23 +50,20 @@ class WithTeardownRegistryDemo {
          */
     }
 
+    static Student createStudent(final String name) {
+        return new Student(name);
+    }
+
+    static void deleteStudent(final Student student) {
+        System.out.println("deleteStudent: " + student.getName());
+    }
+
+    static Course createCourse(final String name) {
+        return new Course(name);
+    }
+
+    static void deleteCourse(final Course course) {
+        System.out.println("deleteStudent: " + course.getName());
+    }
+
 }
-```
-
-## Supported Java Versions
-
-Java 8.
-
-## Dependency
-
-Gradle:
-
-TODO
-
-Maven:
-
-TODO
-
-## License
-
-Licensed under the ASL2 license.
