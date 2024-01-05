@@ -48,7 +48,7 @@ publishing {
             pom {
                 name = project.name
                 description = project.description
-                url = "https://github.com/manhole/junit5-teardown-extension"
+                url = "https://github.com/manhole/junit-teardown-extension"
                 inceptionYear = "2023"
                 licenses {
                     license {
@@ -65,13 +65,13 @@ publishing {
                     }
                 }
                 scm {
-                    connection = "https://github.com/manhole/junit5-teardown-extension.git"
-                    developerConnection = "https://github.com/manhole/junit5-teardown-extension.git"
-                    url = "https://github.com/manhole/junit5-teardown-extension"
+                    connection = "https://github.com/manhole/junit-teardown-extension.git"
+                    developerConnection = "https://github.com/manhole/junit-teardown-extension.git"
+                    url = "https://github.com/manhole/junit-teardown-extension"
                 }
                 issueManagement {
                     system = "GitHub"
-                    url = "https://github.com/manhole/junit5-teardown-extension/issues"
+                    url = "https://github.com/manhole/junit-teardown-extension/issues"
                 }
             }
         }
