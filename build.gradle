@@ -27,6 +27,13 @@ tasks.withType(SourceTask)
         .findAll { t -> t.options.hasProperty('encoding') }
         .each { t -> t.options.encoding = 'UTF-8' }
 
+tasks.withType(Javadoc).configureEach {
+    options {
+        charSet 'UTF-8'
+        locale 'en'
+    }
+}
+
 tasks.withType(Test).configureEach {
     useJUnitPlatform() {
         excludeTags("used-from-test")
@@ -38,13 +45,19 @@ tasks.register('sourcesJar', Jar) {
     from sourceSets.main.allSource
 }
 
-artifacts { archives sourcesJar }
+tasks.register('javadocJar', Jar) {
+    archiveClassifier.set("javadoc")
+    from javadoc
+}
+
+artifacts { archives sourcesJar, javadocJar }
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
             artifact sourcesJar
+            artifact javadocJar
             pom {
                 name = project.name
                 description = project.description
