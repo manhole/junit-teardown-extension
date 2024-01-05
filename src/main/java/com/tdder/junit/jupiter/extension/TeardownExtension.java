@@ -19,6 +19,53 @@ import org.junit.platform.commons.support.HierarchyTraversalMode;
 import org.junit.platform.commons.support.ModifierSupport;
 import org.junit.platform.commons.support.ReflectionSupport;
 
+/**
+ * JUnit Jupiter extension that tears down test fixtures.
+ *
+ * <p>This extension is used with {@link TeardownRegistry}.
+ * When test adds teardown object to {@link TeardownRegistry}, added teardown object will be executed after test.</p>
+ *
+ * <p>
+ * Example:
+ * </p>
+ * <pre>
+ * &#064;ExtendWith(TeardownExtension.class)
+ * class MyTest {
+ *
+ *     // This field is injected by TeardownExtension.
+ *     private TeardownRegistry teardownRegistry;
+ *
+ *     &#064;Test
+ *     void someTest() {
+ *         // === Setup ===
+ *
+ *         // Create test fixture
+ *         final FooFixture fooFixture = createFooFixture(...);
+ *
+ *         // Register tear down code block
+ *         teardownRegistry.add(() -&gt; fooFixture.clear());
+ *
+ *         final BarFixture barFixture = createBarFixture(...);
+ *         teardownRegistry.add(() -&gt; barFixture.close());
+ *
+ *         // ...
+ *
+ *         // === Exercise ===
+ *         // ...
+ *
+ *         // === Verify ===
+ *         // ...
+ *
+ *         // After tests, either succeeded or failure, all added to TeardownRegistry code blocks are executed.
+ *         // The execution order is in reverse order of addition to the TeardownRegistry.
+ *     }
+ *
+ * }
+ * </pre>
+ *
+ * @see TeardownRegistry
+ * @author manhole
+ */
 public class TeardownExtension
         implements ParameterResolver, BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback {
 
