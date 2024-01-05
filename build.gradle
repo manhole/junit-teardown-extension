@@ -20,6 +20,8 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(8)
     }
+    withSourcesJar()
+    withJavadocJar()
 }
 
 tasks.withType(SourceTask)
@@ -40,24 +42,10 @@ tasks.withType(Test).configureEach {
     }
 }
 
-tasks.register('sourcesJar', Jar) {
-    archiveClassifier.set("sources")
-    from sourceSets.main.allSource
-}
-
-tasks.register('javadocJar', Jar) {
-    archiveClassifier.set("javadoc")
-    from javadoc
-}
-
-artifacts { archives sourcesJar, javadocJar }
-
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
-            artifact sourcesJar
-            artifact javadocJar
             pom {
                 name = project.name
                 description = project.description
