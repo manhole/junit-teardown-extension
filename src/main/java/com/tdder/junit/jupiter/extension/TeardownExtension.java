@@ -15,7 +15,9 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.jupiter.api.extension.TestInstances;
-import org.junit.platform.commons.util.ReflectionUtils;
+import org.junit.platform.commons.support.HierarchyTraversalMode;
+import org.junit.platform.commons.support.ModifierSupport;
+import org.junit.platform.commons.support.ReflectionSupport;
 
 public class TeardownExtension
         implements ParameterResolver, BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback {
@@ -39,7 +41,7 @@ public class TeardownExtension
             throws ParameterResolutionException {
 
         final Executable executable = parameterContext.getDeclaringExecutable();
-        if (ReflectionUtils.isStatic(executable)) {
+        if (ModifierSupport.isStatic(executable)) {
             // @BeforeAll
             return resolveParameter(extensionContext, STATIC_STORE_KEY);
         } else {
@@ -128,17 +130,17 @@ public class TeardownExtension
     }
 
     private static List<Field> instanceFields(final Class<?> testClass) {
-        final Predicate<Field> predicate = ((Predicate<Field>) ReflectionUtils::isNotStatic)
+        final Predicate<Field> predicate = ((Predicate<Field>) ModifierSupport::isNotStatic)
                 .and(field -> field.getType().isAssignableFrom(TeardownRegistry.class))
-                .and(ReflectionUtils::isNotFinal);
-        return ReflectionUtils.findFields(testClass, predicate, ReflectionUtils.HierarchyTraversalMode.TOP_DOWN);
+                .and(ModifierSupport::isNotFinal);
+        return ReflectionSupport.findFields(testClass, predicate, HierarchyTraversalMode.TOP_DOWN);
     }
 
     private static List<Field> staticFields(final Class<?> testClass) {
-        final Predicate<Field> predicate = ((Predicate<Field>) ReflectionUtils::isStatic)
+        final Predicate<Field> predicate = ((Predicate<Field>) ModifierSupport::isStatic)
                 .and(field -> field.getType().isAssignableFrom(TeardownRegistry.class))
-                .and(ReflectionUtils::isNotFinal);
-        return ReflectionUtils.findFields(testClass, predicate, ReflectionUtils.HierarchyTraversalMode.TOP_DOWN);
+                .and(ModifierSupport::isNotFinal);
+        return ReflectionSupport.findFields(testClass, predicate, HierarchyTraversalMode.TOP_DOWN);
     }
 
 }
