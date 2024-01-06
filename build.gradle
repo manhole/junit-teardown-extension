@@ -1,7 +1,11 @@
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+
 plugins {
     id 'java'
     id 'maven-publish'
     id 'signing'
+    id "com.tdder.gradle.buildNumber"
 }
 
 repositories {
@@ -39,6 +43,25 @@ tasks.withType(Javadoc).configureEach {
 tasks.withType(Test).configureEach {
     useJUnitPlatform() {
         excludeTags("used-from-test")
+    }
+}
+
+tasks.withType(Jar).configureEach {
+    dependsOn buildNumber
+    doFirst {
+        manifest {
+            attributes["Archiver-Version"] = "Gradle ${gradle.gradleVersion}"
+            attributes["Created-By"] = "Gradle"
+            attributes["Built-By"] = "${System.getProperty("user.name")}"
+            attributes["Build-Jdk"] = "${System.getProperty("java.version")} (${System.getProperty("java.vm.vendor")} ${System.getProperty("java.vm.version")})"
+            attributes["Specification-Title"] = project.name
+            attributes["Specification-Version"] = project.version
+            attributes["Implementation-Title"] = project.name
+            attributes["Implementation-Version"] = project.version
+            attributes["Implementation-Vendor"] = project.group
+            attributes["Built-Timestamp"] = (rootProject.ext.builtTimestamp as Instant).truncatedTo(ChronoUnit.SECONDS).toString()
+            attributes["SCM-Revision"] = rootProject.ext.buildNumberValue
+        }
     }
 }
 
