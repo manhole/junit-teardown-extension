@@ -8,6 +8,9 @@ plugins {
     id "com.tdder.gradle.build-number"
 }
 
+ext.pomName = "JUnit Teardown extension"
+description = "JUnit Jupiter extension. Provides Automated Teardown mechanism."
+
 repositories {
     mavenCentral()
 }
@@ -70,7 +73,7 @@ publishing {
         mavenJava(MavenPublication) {
             from components.java
             pom {
-                name = project.name
+                name = project.ext.pomName
                 description = project.description
                 url = "https://github.com/manhole/junit-teardown-extension"
                 inceptionYear = "2023"
