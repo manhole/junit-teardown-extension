@@ -5,7 +5,7 @@ plugins {
     id 'java'
     id 'maven-publish'
     id 'signing'
-    id "com.tdder.gradle.buildNumber"
+    id "com.tdder.gradle.build-number"
 }
 
 repositories {

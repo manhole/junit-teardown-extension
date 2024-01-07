@@ -5,7 +5,7 @@ plugins {
 gradlePlugin {
     plugins {
         buildNumber {
-            id = "com.tdder.gradle.buildNumber"
+            id = "com.tdder.gradle.build-number"
             implementationClass = "com.tdder.gradle.BuildNumberPlugin"
         }
     }
