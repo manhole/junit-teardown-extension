@@ -64,11 +64,23 @@ Java 8.
 
 Gradle:
 
-TODO
+```
+implementation 'com.tdder.junit:junit-teardown-extension:1.0.0'
+```
 
 Maven:
 
-TODO
+```xml
+<dependency>
+    <groupId>com.tdder.junit</groupId>
+    <artifactId>junit-teardown-extension</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+For other tools, see [Central Repository](https://central.sonatype.com/artifact/com.tdder.junit/junit-teardown-extension).
+
+Not mentioned above, but of course dependency on junit jupiter is required.
 
 ## License
 
