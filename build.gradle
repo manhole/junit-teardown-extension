@@ -53,6 +53,10 @@ tasks.withType(Test).configureEach {
 
 tasks.withType(Jar).configureEach {
     dependsOn buildNumber
+    from(rootDir) {
+        include "LICENSE"
+        into "META-INF"
+    }
     doFirst {
         manifest {
             attributes["Archiver-Version"] = "Gradle ${gradle.gradleVersion}"
