@@ -20,7 +20,7 @@ dependencies {
     implementation libs.junit.jupiter.api
 
     testImplementation libs.hamcrest
-    testCompileOnly libs.junit.platform.launcher
+    testImplementation libs.junit.platform.launcher
 
     testRuntimeOnly libs.junit.jupiter.engine
 }
